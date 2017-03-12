@@ -89,47 +89,7 @@ static bool GetRegistryEntry(HKEY hKey,				// e.g. HKEY_LOCAL_MACHINE
 							 int nBufSize);
 
 
-
-
-static bool GetRegistryEntry(HKEY hKey,				// e.g. HKEY_LOCAL_MACHINE
-							 LPCTSTR pszSubKey,		// e.g. _TEXT("SYSTEM\\CurrentControlSet\\Services\\NDIS\\")
-							 LPCTSTR pszValueName,	// e.g. _TEXT("ImagePath")
-							 DWORD dwType,			// REG_DWORD or REG_SZ
-							 void *pBuf,
-							 int nBufSize)
-{
-	int nResult;
-	HKEY hSubKey;
-	nResult = RegOpenKeyEx(
-		hKey,				// HKEY_*
-		pszSubKey,			// OS Platform specific
-		0,					// Options (Reserved)
-		KEY_READ,			// Security Access Mask
-		&hSubKey);
-	if(nResult!=ERROR_SUCCESS) {
-		return false;
-	}
-
-	DWORD dwDataType = dwType;
-	DWORD dwDataLen = nBufSize;
-	nResult = RegQueryValueEx(
-		hSubKey,				// Handle Of Key To Query
-		pszValueName,			// Name Of Value To Query
-		NULL,					// Reserved, Must Be NULL
-		&dwDataType,			// Pointer To Value Type
-		(unsigned char *)pBuf,	// Pointer To Value Buffer
-		&dwDataLen);			// Pointer To Buffer Size
-
-	if(nResult!=ERROR_SUCCESS) {
-		RegCloseKey(hKey);
-		return false;
-	}
-	RegCloseKey(hKey);
-	return true;
-}
-
-void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFileA,
-			 bool switchFilesA, int nKeepA)
+void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFileA, bool switchFilesA, int nKeepA)
 {
 	if(initialized) {
 		return;
@@ -188,7 +148,7 @@ void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFile
 			REG_DWORD,
 			&Bias,
 			sizeof(Bias))==false) {
-			GotInfo = false; //Could Not Get Bias info From the registry
+				GotInfo = false; //Could Not Get Bias info From the registry
 		}
 
 		if(GetRegistryEntry(
@@ -209,7 +169,7 @@ void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFile
 			REG_DWORD,
 			&DayLightBias,
 			sizeof(DayLightBias))==false) {
-			GotInfo = false; //Could Not Get Daylight Bias Time Zone info From the registry
+				GotInfo = false; //Could Not Get Daylight Bias Time Zone info From the registry
 		}
 
 		EnterCriticalSection(&TZInfoLogCriticalSection);
@@ -240,15 +200,15 @@ void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFile
 	memset(&GlobalNumTagMasks[0], 0, sizeof(GlobalNumTagMasks));
 	std::
 
-	singleLogFile = -1;
+		singleLogFile = -1;
 	std::fill(GlobalLogFileTable, GlobalLogFileTable+LOG_COUNT, -1);
 	/*for(int i = 0; i < LOG_COUNT; ++i) {
-		GlobalLogFileTable[i] = -1;
+	GlobalLogFileTable[i] = -1;
 	}*/
 
 	if(logDir)
 	{
-		strcpy(strLogDir, (char *)logDir);
+		strcpy(strLogDir, (char*)logDir);
 		if(filenamePrefixA)
 		{
 			strncpy(filenamePrefix, filenamePrefixA, sizeof(filenamePrefix));
@@ -257,7 +217,7 @@ void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFile
 		useSingleFile = useSingleFileA;
 		logToFile = true;
 		switchFiles = switchFilesA;
-		if (nKeep == nKeepA)
+		if(nKeep == nKeepA)
 		{
 			timeStamps = new time_t[nKeep];
 
@@ -289,3 +249,83 @@ void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFile
 
 	initialized = true;
 }
+
+void InitLogEx(const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA)
+{
+	if (initialized)
+	{
+		return;
+	}
+
+	bool useSingleFileLocal;
+	bool switchFilesLocal;
+	bStopWrite = false;
+	DWORD regFileSize = 0;
+	bool bRes = false;
+	HKEY hKey;
+
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		"Software\\DiCentral\\Config",
+		0,
+		KEY_READ,
+		&hKey) == ERROR_SUCCESS)
+	{
+		// retrieve the key value
+		DWORD dwSize = 0;
+		DWORD dwType = 0;
+
+		dwType = REG_SZ;
+		char tempbuf[32];
+		dwSize = sizeof(tempbuf);
+
+		char szLogFileSize[] = "LOGFILESIZE";
+		if (RegQueryValueEx(
+			hKey,
+			szLogFileSize,
+			NULL,
+			&dwType,
+			(unsigned char*)tempbuf,
+			&dwSize) == ERROR_SUCCESS)
+		{
+			regFileSize = atoi(tempbuf);
+			bRes = true;
+		}
+		RegCloseKey(hKey);
+	}
+
+	if(bRes)
+	{
+		if(regFileSize > 0 ) //default value of this key in the registry is greater than 0,if it is present
+		{
+			if(regFileSize >= MINLOGSIZE) //should be at least Min log size
+			{
+				g_maxFileSize = regFileSize * SIZE_METRIC;
+				//g_maxfilesize is in bytes
+				//and the registry value is in Megs
+			}
+		}
+	}
+	else {
+		g_maxFileSize = MAXLOGFILESIZE;
+	}
+
+	useSingleFileLocal = (optionsA & LOG_OPTION_USE_SINGLE_FILE) ? true :false;
+	switchFilesLocal = (optionsA & LOG_OPTION_SWITCH_FILES) ? true : false;
+
+	logThreadId = (optionsA & LOG_OPTION_LOG_THREAD_ID) ? true : false;
+	writeToConsole = (optionsA & LOG_OPTION_WRITE_TO_CONSOLE) ? true : false;
+	autoPurge = (optionsA & LOG_OPTION_AUTO_PURGE) ? true : false;
+	seekToEnd = (optionsA & LOG_OPTION_SEEK_TO_END) ? true : false;
+	logProcessId = (optionsA & LOG_OPTION_LOG_PROCESS_ID) ? true : false;
+	logMillisecs = (optionsA & LOG_OPTION_LOG_MILLISECS) ? true : false;
+	logDate = (optionsA & LOG_OPTION_LOG_DATE) ? true : false;
+	logFile = (optionsA & LOG_OPTION_LOG_FILENAME) ? true : false;
+	autoPurgePeriod = DEFAULT_AUTO_PURGE_PERIOD;
+
+	// Default regular expression is derived from filename prefix
+	sprintf(autoPurgeRegExpList, "%s*%s", filenamePrefixA, LOG_FILETYPE);
+
+	// Chain to the original InitLog
+	InitLog(logDir, filenamePrefixA, useSingleFileLocal, switchFilesLocal, nKeepA);
+}
+

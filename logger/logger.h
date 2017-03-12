@@ -70,14 +70,13 @@ typedef enum {
 #define LOG_OPTION_LOG_DATE 0x00000080
 // Write the date with each message ?
 #define LOG_OPTION_LOG_MILLISECS 0x00000100
-// Include millisecs in timestamp with each message ?
+// Include milliseconds in timestamp with each message ?
 #define LOG_OPTION_LOG_FILENAME 0x00000200
 // Include filename/line number with each debug or trace message ?
 
 extern LOG_DECL void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFileA,
 							 bool switchFilesA, int nKeepA);
 extern LOG_DECL void InitLogEx(const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA);
-extern LOG_DECL void SetAutoPurgePeriod(int autoPurgePeriodA);
 extern LOG_DECL time_t GetAutoPurgePeriod(void);
 extern LOG_DECL const char* GetAutoPurgeRegExpList(void);
 extern LOG_DECL void SetAutoPurgeRegExpList(const char* autoPurgeRegExpListA);
