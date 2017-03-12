@@ -74,44 +74,43 @@ typedef enum {
 #define LOG_OPTION_LOG_FILENAME 0x00000200
 // Include filename/line number with each debug or trace message ?
 
+extern LOG_DECL void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFileA,
+							 bool switchFilesA, int nKeepA);
+extern LOG_DECL void InitLogEx(const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA);
+extern LOG_DECL void SetAutoPurgePeriod(int autoPurgePeriodA);
+extern LOG_DECL time_t GetAutoPurgePeriod(void);
+extern LOG_DECL const char* GetAutoPurgeRegExpList(void);
+extern LOG_DECL void SetAutoPurgeRegExpList(const char* autoPurgeRegExpListA);
+extern LOG_DECL void EndLog(void);
+extern LOG_DECL void LogPrintf(LogType logType, LPCSTR fmt, ...);
+extern LOG_DECL void LogDebug(LPCSTR file, int line, LPTSTR fmt, ...);
+extern LOG_DECL void LogTraceStr(LPCSTR file, int line, LPCSTR tag, LPTSTR fmt, ...);
+extern LOG_DECL void LogTraceNum(LPCSTR file, int line, ULONG tag, LPTSTR fmt, ...);
+extern LOG_DECL void LogTraceMask(LPCSTR file, int line, ULONG tag1, ULONG tag2, LPTSTR fmt, ...);
+extern LOG_DECL void EnableLog(LogType logType);
+extern LOG_DECL void DisableLog(LogType logType);
+extern LOG_DECL bool IsLogEnabled(LogType logType);
+extern LOG_DECL void EnableConsole();
+extern LOG_DECL void DisableConsole();
+extern LOG_DECL bool IsConsoleEnabled ();
+extern LOG_DECL void SetLogMask(int mask);
+extern LOG_DECL void SetTraceNumTags(LPCSTR tags);
+extern LOG_DECL void SetTraceStrTags(LPCSTR tags);
+extern LOG_DECL void SetTraceNumTagBase(ULONG base);
+extern LOG_DECL void SetTraceMaskTags(ULONG mask1, ULONG mask2);
+extern LOG_DECL void debugPrintTime(char *mesg, time_t tempTime);
+extern LOG_DECL DWORD LogMaskStr2Mask(const char* maskStr);
 
-#define LOG_INFO(msg)	\
-	LogPrintf(LOG_INFO, msg)
-#define LOG_INFO_1(msg, a1)	\
-	LogPrintf(LOG_INFO, msg, a1)
-#define LOG_INFO_2(msg, a1, a2)	\
-	LogPrintf(LOG_INFO, msg, a1, a2)
-#define LOG_INFO_3(msg, a1, a2, a3)	\
-	LogPrintf(LOG_INFO, msg, a1, a2, a3)
-#define LOG_INFO_4(msg, a1, a2, a3, a4)	\
-	LogPrintf(LOG_INFO, msg, a1, a2, a3, a4)
-#define LOG_INFO_5(msg, a1, a2, a3, a4, a5)	\
-	LogPrintf(LOG_INFO, msg, a1, a2, a3, a4, a5)
-#define LOG_ERROR(msg)	\
-	LogPrintf(LOG_ERROR, msg)
-#define LOG_ERROR_1(msg, a1)	\
-	LogPrintf(LOG_ERROR, msg, a1)
-#define LOG_ERROR_2(msg, a1, a2)	\
-	LogPrintf(LOG_ERROR, msg, a1, a2)
-#define LOG_ERROR_3(msg, a1, a2, a3)	\
-	LogPrintf(LOG_ERROR, msg, a1, a2, a3)
-#define LOG_ERROR_4(msg, a1, a2, a3, a4)	\
-	LogPrintf(LOG_ERROR, msg, a1, a2, a3, a4)
-#define LOG_ERROR_5(msg, a1, a2, a3, a4, a5)	\
-	LogPrintf(LOG_ERROR, msg, a1, a2, a3, a4, a5)
-#define LOG_WARNING(msg)	\
-	LogPrintf(LOG_WARNING, msg)
-#define LOG_WARNING_1(msg, a1)	\
-	LogPrintf(LOG_WARNING, msg, a1)
-#define LOG_WARNING_2(msg, a1, a2)	\
-	LogPrintf(LOG_WARNING, msg, a1, a2)
-#define LOG_WARNING_3(msg, a1, a2, a3)	\
-	LogPrintf(LOG_WARNING, msg, a1, a2, a3)
-#define LOG_WARNING_4(msg, a1, a2, a3, a4)	\
-	LogPrintf(LOG_WARNING, msg, a1, a2, a3, a4)
-#define LOG_WARNING_5(msg, a1, a2, a3, a4, a5)	\
-	LogPrintf(LOG_WARNING, msg, a1, a2, a3, a4, a5)
+// Return the current full path of the log file.
+// Return TRUE on success, FALSE on failure (if buffer is not big enough).
+extern LOG_DECL bool GetLogFilePath(LogType msgType, char* buf, int bufSize);
 
+// Delete log files older than the given time (in secs)
+// "logFiles" is a comma-separated list of regular expressions.
+// eg: "DICFTP*.log, DICAS2*.log"
+// This means that ',' cannot be used in log filenames.
+// "logFiles" should not contain any spaces.
+extern LOG_DECL void DeleteExpiredLogs(LPCSTR logDir, LPCSTR logFiles, time_t logExpirationPeriod);
 
 
 #endif // logger_h__
