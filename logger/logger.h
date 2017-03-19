@@ -1,5 +1,5 @@
-#ifndef logger_h__
-#define logger_h__
+#ifndef diclogger_h__
+#define diclogger_h__
 
 #include <time.h>
 
@@ -41,8 +41,7 @@ typedef enum {
 #define LOG_WARNING_BIT 0x04
 #define LOG_ERROR_BIT 0x08
 #define LOG_TRACE_BIT 0x10
-#define LOG_ALL_BITS \
-	(LOG_DEBUG_BIT|LOG_INFO_BIT|LOG_WARNING_BIT|LOG_ERROR_BIT|LOG_TRACE_BIT)
+#define LOG_ALL_BITS (LOG_DEBUG_BIT|LOG_INFO_BIT|LOG_WARNING_BIT|LOG_ERROR_BIT|LOG_TRACE_BIT)
 
 // Log options
 #define LOG_OPTION_USE_SINGLE_FILE 0x00000001
@@ -62,9 +61,8 @@ typedef enum {
 #define LOG_OPTION_SEEK_TO_END 0x00000020
 // Always seek to the end of the file before writing ?
 // This was added to handle the case where multiple processes
-// can write to the same log file (eg: vcc). The processes still
-// have to coordinate writing to the log file (using a system-wide
-// mutex).
+// can write to the same log file. The processes still
+// have to coordinate writing to the log file (using a system-wide mutex).
 #define LOG_OPTION_LOG_PROCESS_ID 0x00000040
 // Write the process ID with each message ?
 #define LOG_OPTION_LOG_DATE 0x00000080
@@ -77,32 +75,13 @@ typedef enum {
 extern LOG_DECL void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFileA,
 							 bool switchFilesA, int nKeepA);
 extern LOG_DECL void InitLogEx(const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA);
-extern LOG_DECL time_t GetAutoPurgePeriod(void);
-extern LOG_DECL const char* GetAutoPurgeRegExpList(void);
-extern LOG_DECL void SetAutoPurgeRegExpList(const char* autoPurgeRegExpListA);
+extern LOG_DECL void SetAutoPurgePeriod(int autoPurgePeriodA);
 extern LOG_DECL void EndLog(void);
 extern LOG_DECL void LogPrintf(LogType logType, LPCSTR fmt, ...);
-extern LOG_DECL void LogDebug(LPCSTR file, int line, LPTSTR fmt, ...);
-extern LOG_DECL void LogTraceStr(LPCSTR file, int line, LPCSTR tag, LPTSTR fmt, ...);
-extern LOG_DECL void LogTraceNum(LPCSTR file, int line, ULONG tag, LPTSTR fmt, ...);
-extern LOG_DECL void LogTraceMask(LPCSTR file, int line, ULONG tag1, ULONG tag2, LPTSTR fmt, ...);
 extern LOG_DECL void EnableLog(LogType logType);
 extern LOG_DECL void DisableLog(LogType logType);
-extern LOG_DECL bool IsLogEnabled(LogType logType);
-extern LOG_DECL void EnableConsole();
-extern LOG_DECL void DisableConsole();
-extern LOG_DECL bool IsConsoleEnabled ();
 extern LOG_DECL void SetLogMask(int mask);
-extern LOG_DECL void SetTraceNumTags(LPCSTR tags);
-extern LOG_DECL void SetTraceStrTags(LPCSTR tags);
-extern LOG_DECL void SetTraceNumTagBase(ULONG base);
-extern LOG_DECL void SetTraceMaskTags(ULONG mask1, ULONG mask2);
-extern LOG_DECL void debugPrintTime(char *mesg, time_t tempTime);
 extern LOG_DECL DWORD LogMaskStr2Mask(const char* maskStr);
-
-// Return the current full path of the log file.
-// Return TRUE on success, FALSE on failure (if buffer is not big enough).
-extern LOG_DECL bool GetLogFilePath(LogType msgType, char* buf, int bufSize);
 
 // Delete log files older than the given time (in secs)
 // "logFiles" is a comma-separated list of regular expressions.
@@ -111,5 +90,4 @@ extern LOG_DECL bool GetLogFilePath(LogType msgType, char* buf, int bufSize);
 // "logFiles" should not contain any spaces.
 extern LOG_DECL void DeleteExpiredLogs(LPCSTR logDir, LPCSTR logFiles, time_t logExpirationPeriod);
 
-
-#endif // logger_h__
+#endif // diclogger_h__
