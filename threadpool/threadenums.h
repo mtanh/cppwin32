@@ -1,7 +1,7 @@
 #ifndef threadenums_h__
 #define threadenums_h__
 
-enum {
+typedef enum {
 	PRIORITY_LOWEST = 0,
 	PRIORITY_LOW,
 	PRIORITY_NORMAL,

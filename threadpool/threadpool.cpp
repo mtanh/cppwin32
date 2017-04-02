@@ -1,3 +1,4 @@
+
 #include "threadpool.h"
 
 ThreadPool* ThreadPool::theInstance = NULL;
@@ -6,28 +7,27 @@ ThreadPool::ThreadPool( unsigned int min/*=DEFAULT_MIN_THREAD*/, unsigned int ma
 : MinThread(min)
 , MaxThread(max)
 , NumOfIdleThread(0)
-, bInitialized(false)
+, NumOfCurrentThread(0)
 , bRunning(false)
 {
+	InitializeCriticalSection(&csTaskQueueGuard);
+	InitializeCriticalSection(&csThreadMgrGuard);
 }
 
 ThreadPool::~ThreadPool()
 {
-
+	Terminate();
 }
 
 void ThreadPool::Initialize()
 {
 	theInstance = new ThreadPool();
-
-	InitializeCriticalSection(&csTaskQueueGuard);
-
-	bInitialized = true;
 }
 
 void ThreadPool::Terminate()
 {
 	DeleteCriticalSection(&csTaskQueueGuard);
+	DeleteCriticalSection(&csThreadMgrGuard);
 
 	if(theInstance)
 	{
@@ -38,7 +38,7 @@ void ThreadPool::Terminate()
 
 ThreadPool& ThreadPool::GetInstance()
 {
-	if(!bInitialized)
+	if(NULL == theInstance)
 	{
 		Initialize();
 	}
@@ -47,14 +47,23 @@ ThreadPool& ThreadPool::GetInstance()
 
 void ThreadPool::Run( Poolable* p )
 {
-
+	if(p != NULL)
+	{
+		EnterCriticalSection(&csThreadMgrGuard);
+		if(NumOfIdleThread == 0 && NumOfCurrentThread < MaxThread)
+		{
+			CreateAndStartThread();
+		}
+		LeaveCriticalSection(&csThreadMgrGuard);
+		Enqueue(p);
+	}
 }
 
 void ThreadPool::Start()
 {
 	if(!bRunning)
 	{
-		// first of all, need to enable bRunning so that the threads can work
+		// first of all, need to enable bRunning so that the worker threads can work
 		bRunning = true;
 
 		for(int i=0; i<MinThread; ++i)
@@ -66,7 +75,12 @@ void ThreadPool::Start()
 
 void ThreadPool::Stop()
 {
+	if(bRunning)
+	{
+		bRunning = false;
 
+		// signal all worker thread that is sleeping
+	}
 }
 
 void ThreadPool::CreateAndStartThread()
@@ -80,10 +94,35 @@ void ThreadPool::CreateAndStartThread()
 		0, // initial state
 		&threadId);
 
-
+	ThreadState ts;
+	EnterCriticalSection(&csThreadMgrGuard);
+	ThreadMgr.insert(std::make_pair(threadId, ts));
+	NumOfIdleThread++;
+	NumOfCurrentThread++;
+	LeaveCriticalSection(&csThreadMgrGuard);
 }
 
-unsigned int __stdcall ThreadPool::PollTask( void *p_this )
+unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 {
+	ThreadPool* tp = (ThreadPool*)pThis;
+	if(tp)
+	{
+		while(tp->bRunning)
+		{
+			Sleep(500);
+		}
+	}
+	return 1;
+}
 
+void ThreadPool::Enqueue( Poolable* p )
+{
+	EnterCriticalSection(&csTaskQueueGuard);
+	TaskQueue.push(p);
+	LeaveCriticalSection(&csTaskQueueGuard);
+}
+
+Poolable* ThreadPool::Dequeue()
+{
+	return NULL;
 }

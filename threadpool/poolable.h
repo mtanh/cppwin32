@@ -1,6 +1,7 @@
 #ifndef poolable_h__
 #define poolable_h__
 
+#include <stddef.h>
 #include "threadenums.h"
 
 class Poolable
@@ -17,9 +18,9 @@ public:
 	TaskPriority Priority;
 	bool bDestroyOnComplete;
 
-private:
-	Poolable(const Poolable& other);
-	Poolable operator =(const Poolable& other);
+//private:
+//	Poolable(const Poolable& other);
+//	Poolable operator =(const Poolable& other);
 };
 
 #endif // poolable_h__

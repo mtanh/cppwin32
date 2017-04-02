@@ -2,8 +2,10 @@
 #define threadpool_h__
 
 #include <Windows.h>
+#include <process.h>
 #include <vector>
 #include <queue>
+#include <map>
 #include <limits>
 
 #include "poolablecomparision.h"
@@ -30,8 +32,8 @@ public:
 	
 	static ThreadPool& GetInstance();
 
-	inline void SetMaxThread(unsigned int max) { MaxThread = (max>0&&max<UINT_MAX)?max:DEFAULT_MAX_THREAD; }
-	inline void SetMinThread(unsigned int min) { MinThread = (min>0&&min<UINT_MAX)?min:DEFAULT_MIN_THREAD; }
+	inline void SetMaxThread(int max) { MaxThread = (max>0&&max<INT_MAX)?max:DEFAULT_MAX_THREAD; }
+	inline void SetMinThread(int min) { MinThread = (min>0&&min<INT_MAX)?min:DEFAULT_MIN_THREAD; }
 	
 	void Start();
 	void Stop();
@@ -39,10 +41,10 @@ public:
 
 private:
 	static ThreadPool* theInstance;
-	unsigned int MaxThread;
-	unsigned int MinThread;
-	unsigned int NumOfIdleThread;
-	bool bInitialized;
+	int MaxThread;
+	int MinThread;
+	int NumOfIdleThread;
+	int NumOfCurrentThread;
 	bool bRunning;
 
 	typedef std::priority_queue<Poolable*, std::vector<Poolable*>, PoolableComparision > PRIORITYQUEUE;
@@ -53,16 +55,19 @@ private:
 	typedef std::map<THREAD_ID, ThreadState> THREADMAP;
 	typedef THREADMAP::iterator THREADMAP_ITER;
 	THREADMAP ThreadMgr;
+	CRITICAL_SECTION csThreadMgrGuard;
 
 private:
 	ThreadPool(unsigned int min=DEFAULT_MIN_THREAD, unsigned int max=DEFAULT_MAX_THREAD);
 	ThreadPool(const ThreadPool& other);
 	ThreadPool operator =(const ThreadPool& other);
 
-	void Initialize();
+	static void Initialize();
 	void Terminate();
 	void CreateAndStartThread();
-	static unsigned int __stdcall PollTask(void *p_this);
+	void Enqueue(Poolable* p);
+	Poolable* Dequeue();
+	static unsigned int __stdcall PollTask(void *pThis);
 };
 
 #endif // threadpool_h__
