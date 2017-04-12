@@ -4,13 +4,19 @@
 #include <stddef.h>
 #include "threadenums.h"
 
+class Wakeable
+{
+public:
+	virtual void Wake() = 0;
+};
+
 class Poolable
 {
 public:
 	Poolable(TaskPriority priority=PRIORITY_NORMAL, bool destroy_on_complete=true);
 	virtual ~Poolable();
 
-	virtual void RunImmediately(void* arg=NULL) = 0;
+	virtual void Wake() = 0;
 	//friend bool operator >(Poolable& p1, Poolable& p2);
 	//friend bool operator <(Poolable& p1, Poolable& p2);
 

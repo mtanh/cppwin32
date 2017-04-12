@@ -4,11 +4,8 @@
 int main(unsigned int argc, char* argv[])
 {
 	ThreadPool::GetInstance().Start();
-
-	for(;;)
-	{
-		Sleep(500);
-	}
+	Sleep(120000);
+	ThreadPool::GetInstance().Stop();
 
 	return 0;
 }

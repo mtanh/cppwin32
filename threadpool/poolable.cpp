@@ -1,8 +1,8 @@
 #include "poolable.h"
 
-Poolable::Poolable( TaskPriority priority/*=PRIORITY_NORMAL*/, bool destroy_on_complete/*=true*/ )
+Poolable::Poolable( TaskPriority priority/*=PRIORITY_NORMAL*/, bool destroyOnComplete/*=true*/ )
 : Priority(priority)
-, bDestroyOnComplete(destroy_on_complete)
+, bDestroyOnComplete(destroyOnComplete)
 {
 }
 
