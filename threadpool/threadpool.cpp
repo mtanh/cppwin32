@@ -29,7 +29,6 @@ ThreadPool::ThreadPool( int maxThread/*=DEFAULT_MAX_THREAD*/, int minThread/*=DE
 
 ThreadPool::~ThreadPool()
 {
-	Terminate();
 }
 
 void ThreadPool::Initialize()
@@ -43,11 +42,23 @@ void ThreadPool::Terminate()
 	DeleteCriticalSection(&csThreadMgrGuard);
 	DeleteCriticalSection(&csThreadPoolState);
 
+	// close worker event/thread handles
+	for(int i=0; i<ThreadHndCnt; ++i)
+	{
+		CloseHandle(ThreadHndTbl[i]);
+	}
+	CloseHandle(ThreadCheckerHnd);
+	CloseHandle(TimedOutEvent);
+
+	ThreadMgr.clear(); // clear the thread manager
+
 	if(theInstance)
 	{
 		delete theInstance;
 	}
 	theInstance = NULL;
+
+	std::cout << "all resources was destroyed\n";
 }
 
 ThreadPool& ThreadPool::GetInstance()
@@ -86,6 +97,22 @@ void ThreadPool::Start()
 		{
 			CreateAndStartThread();
 		}
+
+		// start the monitoring thread
+		THREAD_ID threadId;
+		ThreadCheckerHnd = (HANDLE)_beginthreadex(
+			NULL, // security
+			0, // stack size or 0
+			ResourceCheckingTimer, 
+			this,
+			0, // initial state
+			&threadId);
+
+		// create event to control the monitoring thread
+		TimedOutEvent = CreateEvent(NULL, // default security attributes
+			TRUE, // manual-reset event object
+			FALSE, // initial state is non-signaled
+			NULL);
 	}
 	LeaveCriticalSection(&csThreadPoolState);
 }
@@ -98,13 +125,15 @@ void ThreadPool::Stop()
 		bRunning = false;
 		LeaveCriticalSection(&csThreadPoolState);
 
-		// signal all worker thread that is sleeping
+		// signal all worker thread that is sleeping and wait for all worker thread done
 		WakeAllConditionVariable(&cvTaskQueueIsNotEmpty);
-
-		// wait for all worker thread done
 		WaitForMultipleObjects(ThreadHndCnt, ThreadHndTbl,
 			TRUE, // wait for all done
 			INFINITE); // wait timeout
+
+		// wait for monitoring thread done
+		SetEvent(TimedOutEvent);
+		WaitForSingleObject(ThreadCheckerHnd, INFINITE);
 	}
 	LeaveCriticalSection(&csThreadPoolState);
 }
@@ -150,10 +179,20 @@ unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 
 	while(true)
 	{
+		std::cout << "new loop: " << time(0L) << "\n";
 		EnterCriticalSection(&tp->csThreadPoolState);
 		if(tp->bRunning)
 		{
 			LeaveCriticalSection(&tp->csThreadPoolState);
+
+			EnterCriticalSection(&tp->csThreadMgrGuard);
+			if(ts.QuitAllowed)
+			{
+				std::cout << "no longer task. should be quit\n";
+				LeaveCriticalSection(&tp->csThreadMgrGuard);
+				break;
+			}
+			LeaveCriticalSection(&tp->csThreadMgrGuard);
 
 			Poolable* taskItem = tp->Dequeue(); // block here
 			if(NULL == taskItem)
@@ -174,6 +213,7 @@ unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 			EnterCriticalSection(&tp->csThreadMgrGuard);
 			tp->NumOfIdleThread++;
 			ts.Working = false;
+			time(&ts.IdleTimeStamp);
 			LeaveCriticalSection(&tp->csThreadMgrGuard);
 		}
 		else
@@ -232,4 +272,66 @@ void ThreadPool::RunImmediately( Poolable* p )
 		delete p;
 		p = NULL;
 	}
+}
+
+unsigned int __stdcall ThreadPool::ResourceCheckingTimer( void* pThis )
+{
+	ThreadPool* tp = (ThreadPool*)pThis;
+	if(NULL == tp)
+	{
+		return 0;
+	}
+
+	while(true)
+	{
+		EnterCriticalSection(&tp->csThreadPoolState);
+		if(tp->bRunning)
+		{
+			LeaveCriticalSection(&tp->csThreadPoolState);
+			DWORD dwWaitResult = WaitForSingleObject(tp->TimedOutEvent, WAIT_FOR_CHECK); // 5 seconds interval
+			switch(dwWaitResult)
+			{
+				case WAIT_OBJECT_0+0:
+					std::cout << "thread pool is going to stop\n";
+					break;
+
+				case WAIT_TIMEOUT:
+					std::cout << "timed out. start check: " << time(0L) << "\n";
+					tp->CheckAndReleasePoolResource();
+					break;
+
+				default:
+					break;
+			}
+		}
+		else
+		{
+			LeaveCriticalSection(&tp->csThreadPoolState);
+			break;
+		}
+	}
+}
+
+void ThreadPool::CheckAndReleasePoolResource()
+{
+	EnterCriticalSection(&csThreadMgrGuard);
+	std::cout << "ThreadMgr.size:" << ThreadMgr.size() << "\n";
+	THREADMAP_ITER eraseThread = ThreadMgr.end();
+	THREADMAP_ITER threadMgrIter = ThreadMgr.begin();
+	for(; threadMgrIter != ThreadMgr.end(); ++threadMgrIter)
+	{
+		if(eraseThread != ThreadMgr.end())
+		{
+			ThreadMgr.erase(eraseThread);
+			eraseThread = ThreadMgr.end();
+		}
+
+		ThreadState &threadState = threadMgrIter->second;
+		__time64_t idleTime = time(0L) - threadState.IdleTimeStamp;
+		if(idleTime >= 70)
+		{
+			threadState.QuitAllowed = true; // worker thread is idle too long
+		}
+	}
+	LeaveCriticalSection(&csThreadMgrGuard);
 }
