@@ -316,21 +316,20 @@ void ThreadPool::CheckAndReleasePoolResource()
 {
 	EnterCriticalSection(&csThreadMgrGuard);
 	std::cout << "ThreadMgr.size:" << ThreadMgr.size() << "\n";
-	THREADMAP_ITER eraseThread = ThreadMgr.end();
-	THREADMAP_ITER threadMgrIter = ThreadMgr.begin();
-	for(; threadMgrIter != ThreadMgr.end(); ++threadMgrIter)
+	THREADMAP_ITER iter = ThreadMgr.begin();
+	for(; iter != ThreadMgr.end();)
 	{
-		if(eraseThread != ThreadMgr.end())
-		{
-			ThreadMgr.erase(eraseThread);
-			eraseThread = ThreadMgr.end();
-		}
-
-		ThreadState &threadState = threadMgrIter->second;
+		ThreadState &threadState = iter->second;
 		__time64_t idleTime = time(0L) - threadState.IdleTimeStamp;
-		if(idleTime >= 70)
+		if(idleTime >= THREAD_IDLE_TIME_LIMIT)
 		{
 			threadState.QuitAllowed = true; // worker thread is idle too long
+			ThreadMgr.erase(iter++);
+			std::cout << "deleted item. new size: " << ThreadMgr.size() << "\n";
+		}
+		else
+		{
+			++iter;
 		}
 	}
 	LeaveCriticalSection(&csThreadMgrGuard);

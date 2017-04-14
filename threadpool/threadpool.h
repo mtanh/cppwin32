@@ -12,6 +12,7 @@
 
 #define WAIT_FOR_TASK 5000L // 5 seconds
 #define WAIT_FOR_CHECK 60000L // 60 seconds
+#define THREAD_IDLE_TIME_LIMIT	60 // 60 seconds
 
 const int DEFAULT_MIN_THREAD = 1;
 const int DEFAULT_MAX_THREAD = -1;
