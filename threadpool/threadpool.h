@@ -66,11 +66,6 @@ private:
 	HANDLE ThreadHndTbl[MAXIMUM_WAIT_OBJECTS];
 	int ThreadHndCnt;
 
-	// map the ThreadId and ThreadHandle
-	/*typedef std::map<THREAD_ID, HANDLE> THREADIDMAP;
-	typedef std::map<THREAD_ID, HANDLE>::iterator THREADIDMAP_ITER;
-	THREADIDMAP ThreadIdMapper;*/
-
 	// the thread that manage and release the worker thread resources
 	HANDLE ThreadCheckerHnd;
 	HANDLE TimedOutEvent;
