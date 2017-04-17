@@ -29,7 +29,7 @@ DicWriteFile::~DicWriteFile()
 
 void DicWriteFile::Wake()
 {
-	Sleep(150000);
+	Sleep(15000);
 }
 
 #endif // writefile_h__

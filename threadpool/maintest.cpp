@@ -2,10 +2,14 @@
 #include "threadpool.h"
 #include "writefile.h"
 
+ThreadPool* globalThreadPool;
+
 int main(unsigned int argc, char* argv[])
 {
-	ThreadPool& theGlobalInstance = ThreadPool::GetInstance();
-	theGlobalInstance.Start();
+	ThreadPool tp;
+	globalThreadPool = &tp;
+	//ThreadPool& theGlobalInstance = ThreadPool::GetInstance();
+	globalThreadPool->Start();
 
 	DicWriteFile* writeFile01 = new DicWriteFile(PRIORITY_HIGHEST, true);
 	DicWriteFile* writeFile02 = new DicWriteFile(PRIORITY_HIGH, true);
@@ -25,25 +29,25 @@ int main(unsigned int argc, char* argv[])
 	DicWriteFile* writeFile14 = new DicWriteFile(PRIORITY_LOW, true);
 	DicWriteFile* writeFile15 = new DicWriteFile(PRIORITY_LOWEST, true);
 
-	theGlobalInstance.Run(writeFile05);
-	theGlobalInstance.Run(writeFile04);
-	theGlobalInstance.Run(writeFile02);
-	theGlobalInstance.Run(writeFile03);
-	theGlobalInstance.Run(writeFile01);
-	theGlobalInstance.Run(writeFile06);
-	theGlobalInstance.Run(writeFile08);
-	theGlobalInstance.Run(writeFile07);
-	theGlobalInstance.Run(writeFile10);
-	theGlobalInstance.Run(writeFile09);
-	theGlobalInstance.Run(writeFile15);
-	theGlobalInstance.Run(writeFile14);
-	theGlobalInstance.Run(writeFile12);
-	theGlobalInstance.Run(writeFile13);
-	theGlobalInstance.Run(writeFile11);
+	globalThreadPool->Run(writeFile05);
+	globalThreadPool->Run(writeFile04);
+	/*globalThreadPool->Run(writeFile02);
+	globalThreadPool->Run(writeFile03);
+	globalThreadPool->Run(writeFile01);
+	globalThreadPool->Run(writeFile06);
+	globalThreadPool->Run(writeFile08);
+	globalThreadPool->Run(writeFile07);
+	globalThreadPool->Run(writeFile10);
+	globalThreadPool->Run(writeFile09);
+	globalThreadPool->Run(writeFile15);
+	globalThreadPool->Run(writeFile14);
+	globalThreadPool->Run(writeFile12);
+	globalThreadPool->Run(writeFile13);
+	globalThreadPool->Run(writeFile11);*/
 
-	Sleep(300000L);
-	ThreadPool::GetInstance().Stop();
-	ThreadPool::GetInstance().Terminate();
+	Sleep(200000L);
+	globalThreadPool->Stop();
+	globalThreadPool->Terminate();
 
 	return 0;
 }
