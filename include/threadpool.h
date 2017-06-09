@@ -8,7 +8,9 @@
 #include <map>
 #include <limits>
 #include <time.h>
-#include "poolablecomparision.h"
+
+#include <common.h>
+#include <poolablecomparision.h>
 
 #define WAIT_FOR_TASK 5000L // 5 seconds
 #define WAIT_FOR_CHECK 60000L // 60 seconds
@@ -28,39 +30,37 @@ struct ThreadState
 	ThreadState(): Working(false), QuitAllowed(false), IdleTimeStamp(time(0L)) {}
 };
 
+#ifdef USE_VECTOR_OF_PAIR
 typedef unsigned int THREAD_ID;
 typedef std::pair<THREAD_ID, ThreadState> ThreadData;
 class ThreadDataCompare
 {
 public:
-	bool operator()(const ThreadData& lhs, const ThreadData& rhs) const
-	{
+	bool operator()(const ThreadData& lhs, const ThreadData& rhs) const {
 		return keyLess(lhs.first, rhs.first);
 	}
 
-	bool operator()(const ThreadData& lhs, THREAD_ID k) const
-	{
+	bool operator()(const ThreadData& lhs, THREAD_ID k) const {
 		return keyLess(lhs.first, k);
 	}
 
-	bool operator()(THREAD_ID k, const ThreadData& rhs) const
-	{
+	bool operator()(THREAD_ID k, const ThreadData& rhs) const {
 		return keyLess(k, rhs.first);
 	}
 
 private:
-	bool keyLess(THREAD_ID k1, THREAD_ID k2) const
-	{
+	bool keyLess(THREAD_ID k1, THREAD_ID k2) const {
 		return k1 < k2;
 	}
 };
+#endif // USE_VECTOR_OF_PAIR
 
-class ThreadPool
+class DECL_EXPORT ThreadPool
 {
 public:
 	ThreadPool(int maxThread=DEFAULT_MAX_THREAD, int minThread=DEFAULT_MIN_THREAD);
 	~ThreadPool();
-	
+
 	//static ThreadPool& GetInstance();
 	void Start(); // start the pool looping
 	void Stop(); // stop the pool, may be started later
@@ -86,8 +86,9 @@ private:
 	CRITICAL_SECTION csTaskQueueGuard;
 	CONDITION_VARIABLE cvTaskQueueIsNotEmpty;
 
-	typedef std::vector<ThreadData> THREADMAP;
-	//typedef std::map<THREAD_ID, ThreadState> THREADMAP;
+	typedef unsigned int THREAD_ID;
+	//typedef std::vector<ThreadData> THREADMAP;
+	typedef std::map<THREAD_ID, ThreadState> THREADMAP;
 	typedef THREADMAP::iterator THREADMAP_ITER;
 	THREADMAP ThreadMgr;
 	CRITICAL_SECTION csThreadMgrGuard;
@@ -99,7 +100,7 @@ private:
 	// the thread that manage and release the worker thread resources
 	HANDLE ThreadCheckerHnd;
 	HANDLE TimedOutEvent;
-	
+
 private:
 	//ThreadPool(int maxThread=DEFAULT_MAX_THREAD, int minThread=DEFAULT_MIN_THREAD);
 	ThreadPool(const ThreadPool& other);

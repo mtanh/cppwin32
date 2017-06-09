@@ -41,34 +41,27 @@ void ThreadPool::Terminate()
 	EnterCriticalSection(&csThreadPoolStateGuard);
 	if(!bRunning) // only destroy resource once Stop function was invoked
 	{
-		LeaveCriticalSection(&csThreadPoolStateGuard);
 		DeleteCriticalSection(&csTaskQueueGuard);
 		DeleteCriticalSection(&csThreadMgrGuard);
-		DeleteCriticalSection(&csThreadPoolStateGuard);
 
 		// close worker event/thread handles
 		for(int i=0; i<ThreadHndCnt; ++i)
 		{
-			if(ThreadHndTbl[i])
-			{
+			if(ThreadHndTbl[i]) {
 				CloseHandle(ThreadHndTbl[i]);
 			}
 		}
 
-		//CloseHandle(ThreadCheckerHnd);
-		//CloseHandle(TimedOutEvent);
+		CloseHandle(ThreadCheckerHnd);
+		CloseHandle(TimedOutEvent);
 
-		if(!ThreadMgr.empty())
-		{
-			ThreadMgr.clear(); // clear the thread manager
-		}
+		ThreadMgr.clear(); // clear the thread manager
 
-		/*if(theInstance)
-		{
-		delete theInstance;
-		}
-		theInstance = NULL;*/
-		//printf("All resources was destroyed\n");
+		LeaveCriticalSection(&csThreadPoolStateGuard);
+		DeleteCriticalSection(&csThreadPoolStateGuard);
+	}
+	else {
+		LeaveCriticalSection(&csThreadPoolStateGuard);
 	}
 }
 
@@ -86,8 +79,8 @@ void ThreadPool::Run( Poolable* p )
 	if(p != NULL)
 	{
 		EnterCriticalSection(&csThreadMgrGuard);
-		//printf("NumOfIdleThread: %d\n", NumOfIdleThread);
-		//printf("NumOfCurrentThread: %d\n", NumOfCurrentThread);
+		/*printf("NumOfIdleThread: %d\n", NumOfIdleThread);
+		printf("NumOfCurrentThread: %d\n", NumOfCurrentThread);*/
 		if(NumOfIdleThread == 0 && NumOfCurrentThread < MaxThread)
 		{
 			CreateAndStartThread();
@@ -106,29 +99,27 @@ void ThreadPool::Start()
 		bRunning = true;
 		LeaveCriticalSection(&csThreadPoolStateGuard);
 
-		for(int i=0; i<MinThread; ++i)
-		{
+		for(int i=0; i<MinThread; ++i) {
 			CreateAndStartThread();
 		}
 
 		// start the monitoring thread
-		//THREAD_ID threadId;
-		//ThreadCheckerHnd = (HANDLE)_beginthreadex(
-		//	NULL, // security
-		//	0, // stack size or 0
-		//	ResourceCheckingTimer, 
-		//	this,
-		//	0, // initial state
-		//	&threadId);
+		THREAD_ID threadId;
+		ThreadCheckerHnd = (HANDLE)_beginthreadex(
+			NULL, // security
+			0, // stack size or 0
+			ResourceCheckingTimer, 
+			this,
+			0, // initial state
+			&threadId);
 
 		// create event to control the monitoring thread
-		//TimedOutEvent = CreateEvent(NULL, // default security attributes
-		//	TRUE, // manual-reset event object
-		//	FALSE, // initial state is non-signaled
-		//	NULL);
+		TimedOutEvent = CreateEvent(NULL, // default security attributes
+			TRUE, // manual-reset event object
+			FALSE, // initial state is non-signaled
+			NULL);
 	}
-	else
-	{
+	else {
 		LeaveCriticalSection(&csThreadPoolStateGuard);
 	}
 }
@@ -151,8 +142,7 @@ void ThreadPool::Stop()
 		/*SetEvent(TimedOutEvent);
 		WaitForSingleObject(ThreadCheckerHnd, INFINITE);*/
 	}
-	else
-	{
+	else {
 		LeaveCriticalSection(&csThreadPoolStateGuard);
 	}
 }
@@ -168,39 +158,32 @@ void ThreadPool::CreateAndStartThread()
 		CREATE_SUSPENDED, // initial state
 		&threadId);
 
-	ThreadState ts;
 	EnterCriticalSection(&csThreadMgrGuard);
-	//ThreadMgr.insert(std::pair<THREAD_ID, ThreadState>(threadId, ts));
-	ThreadMgr.push_back(std::pair<THREAD_ID, ThreadState>(threadId, ts));
-	std::sort(ThreadMgr.begin(), ThreadMgr.end(), ThreadDataCompare());
-	char buf[1024] = {0};
-	sprintf(buf, "Thread %d added\n", threadId);
-	printf(buf);
-
+	ThreadState ts;
+	ThreadMgr.insert(std::make_pair(threadId, ts));
 	ThreadHndTbl[ThreadHndCnt++] = threadHandle;
 	NumOfIdleThread++;
 	NumOfCurrentThread++;
-	LeaveCriticalSection(&csThreadMgrGuard);
 	(void)ResumeThread(threadHandle);
+	LeaveCriticalSection(&csThreadMgrGuard);
 }
 
 unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 {
 	ThreadPool* tp = (ThreadPool*)pThis;
-	if(NULL == tp)
-	{
+	if(NULL == tp) {
 		return 0;
 	}
 
 	THREAD_ID threadId = (THREAD_ID)GetCurrentThreadId();
 	EnterCriticalSection(&tp->csThreadMgrGuard);
-	//THREADMAP_ITER iter = tp->ThreadMgr.find(threadId);
-	THREADMAP_ITER iter = std::lower_bound(tp->ThreadMgr.begin(),
+	THREADMAP_ITER iter = tp->ThreadMgr.find(threadId);
+	/*THREADMAP_ITER iter = std::lower_bound(tp->ThreadMgr.begin(),
 		tp->ThreadMgr.end(),
 		threadId,
-		ThreadDataCompare());
+		ThreadDataCompare());*/
 
-	if(iter == tp->ThreadMgr.end() || iter->first != threadId)
+	if(iter == tp->ThreadMgr.end() /*|| iter->first != threadId*/)
 	{
 		LeaveCriticalSection(&tp->csThreadMgrGuard);
 		return 0;
@@ -217,21 +200,17 @@ unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 		{
 			LeaveCriticalSection(&tp->csThreadPoolStateGuard);
 
-			/*EnterCriticalSection(&tp->csThreadMgrGuard);
+			EnterCriticalSection(&tp->csThreadMgrGuard);
 			if(ts.QuitAllowed)
 			{
-			char buf[1024] = {0};
-			sprintf(buf, "Thread %d has no longer task. should be quit\n", threadId);
-			printf(buf);
-
-			LeaveCriticalSection(&tp->csThreadMgrGuard);
-			break;
+				printf("Thread %d has no longer task. should be quit\n", threadId);
+				LeaveCriticalSection(&tp->csThreadMgrGuard);
+				break;
 			}
-			LeaveCriticalSection(&tp->csThreadMgrGuard);*/
+			LeaveCriticalSection(&tp->csThreadMgrGuard);
 
 			Poolable* taskItem = tp->Dequeue(); // block here
-			if(NULL == taskItem)
-			{
+			if(NULL == taskItem) {
 				continue;
 			}
 
@@ -260,12 +239,12 @@ unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 
 	// the worker thread no longer works 
 	EnterCriticalSection(&tp->csThreadMgrGuard);
+	tp->ThreadMgr.erase(threadId);
 	tp->NumOfCurrentThread--;
+	tp->NumOfIdleThread--;
 
-	//tp->ThreadMgr.erase(threadId);
-	/*char buf[1024] = {0};
-	sprintf(buf, "Removed %d from map. New size: %d\n", threadId, tp->ThreadMgr.size());
-	printf(buf);*/
+	printf("Removed %d from map. New size: %d\n", threadId, tp->ThreadMgr.size());
+
 	LeaveCriticalSection(&tp->csThreadMgrGuard);
 
 	return 1;
@@ -275,9 +254,9 @@ void ThreadPool::Enqueue( Poolable* p )
 {
 	EnterCriticalSection(&csTaskQueueGuard);
 	TaskQueue.push(p);
-	//WakeConditionVariable(&cvTaskQueueIsNotEmpty);
-	LeaveCriticalSection(&csTaskQueueGuard);
 	WakeConditionVariable(&cvTaskQueueIsNotEmpty);
+	LeaveCriticalSection(&csTaskQueueGuard);
+	//WakeConditionVariable(&cvTaskQueueIsNotEmpty);
 }
 
 Poolable* ThreadPool::Dequeue()
@@ -319,8 +298,7 @@ void ThreadPool::RunImmediately( Poolable* p )
 unsigned int __stdcall ThreadPool::ResourceCheckingTimer( void* pThis )
 {
 	ThreadPool* tp = (ThreadPool*)pThis;
-	if(NULL == tp)
-	{
+	if(NULL == tp) {
 		return 0;
 	}
 
