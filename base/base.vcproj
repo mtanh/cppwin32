@@ -166,6 +166,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\logger\logger.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\threadpool\poolable.cpp"
 				>
 			</File>
@@ -185,6 +189,10 @@
 			>
 			<File
 				RelativePath="..\include\common.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\logger.h"
 				>
 			</File>
 			<File

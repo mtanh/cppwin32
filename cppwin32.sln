@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "logger", "logger\logger.vcproj", "{C9B2247C-2FF4-4FB6-9E0F-D30D6218379C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base", "base\base.vcproj", "{819E2F4A-65F9-475F-9249-39424A8A0E75}"
 EndProject
 Global
@@ -11,10 +9,6 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C9B2247C-2FF4-4FB6-9E0F-D30D6218379C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C9B2247C-2FF4-4FB6-9E0F-D30D6218379C}.Debug|Win32.Build.0 = Debug|Win32
-		{C9B2247C-2FF4-4FB6-9E0F-D30D6218379C}.Release|Win32.ActiveCfg = Release|Win32
-		{C9B2247C-2FF4-4FB6-9E0F-D30D6218379C}.Release|Win32.Build.0 = Release|Win32
 		{819E2F4A-65F9-475F-9249-39424A8A0E75}.Debug|Win32.ActiveCfg = Debug|Win32
 		{819E2F4A-65F9-475F-9249-39424A8A0E75}.Debug|Win32.Build.0 = Debug|Win32
 		{819E2F4A-65F9-475F-9249-39424A8A0E75}.Release|Win32.ActiveCfg = Release|Win32

@@ -11,7 +11,7 @@
 #include <sys/timeb.h>
 #include <algorithm>
 
-#include "logger.h"
+#include <logger.h>
 
 #define GET_THREAD_ID() (GetCurrentThreadId())
 #define GET_PROCESS_ID() (GetCurrentProcessId())
@@ -140,7 +140,7 @@ void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFile
 	initialized = true;
 }
 
-extern LOG_DECL void InitLogEx( const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA )
+void InitLogEx( const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA )
 {
 	if (initialized)
 	{
