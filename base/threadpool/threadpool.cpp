@@ -1,6 +1,8 @@
 #include <time.h>
 #include <assert.h>
 #include <algorithm>
+
+#include "logger.h"
 #include "poolable.h"
 #include "threadpool.h"
 
@@ -190,7 +192,7 @@ unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 	}
 	LeaveCriticalSection(&tp->csThreadMgrGuard);
 
-	printf("Found thread %d in map\n", threadId);
+	LogPrintf(LOG_DEBUG, "Found thread %d in map\n", threadId);
 	ThreadState &ts = iter->second;
 
 	while(true)
@@ -203,7 +205,7 @@ unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 			EnterCriticalSection(&tp->csThreadMgrGuard);
 			if(ts.QuitAllowed)
 			{
-				printf("Thread %d has no longer task. should be quit\n", threadId);
+				LogPrintf(LOG_DEBUG, "Thread %d has no longer task. should be quit\n", threadId);
 				LeaveCriticalSection(&tp->csThreadMgrGuard);
 				break;
 			}
@@ -243,7 +245,7 @@ unsigned int __stdcall ThreadPool::PollTask( void *pThis )
 	tp->NumOfCurrentThread--;
 	tp->NumOfIdleThread--;
 
-	printf("Removed %d from map. New size: %d\n", threadId, tp->ThreadMgr.size());
+	LogPrintf(LOG_DEBUG, "Removed %d from map. New size: %d\n", threadId, tp->ThreadMgr.size());
 
 	LeaveCriticalSection(&tp->csThreadMgrGuard);
 
@@ -286,7 +288,7 @@ void ThreadPool::RunImmediately( Poolable* p )
 {
 	assert(p != NULL);
 	p->Wake();
-	printf("[%x - %d] Done: %lu\n", p, p->Priority, time(0L));
+	LogPrintf(LOG_DEBUG, "[%x - %d] Done: %lu\n", p, p->Priority, time(0L));
 
 	if(p->bDestroyOnComplete)
 	{

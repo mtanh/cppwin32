@@ -2,9 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="base"
-	ProjectGUID="{819E2F4A-65F9-475F-9249-39424A8A0E75}"
-	RootNamespace="base"
+	Name="test"
+	ProjectGUID="{0E657D44-7EA2-4A28-AEE4-117FFB95BC50}"
+	RootNamespace="test"
+	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -19,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="../out"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="0"
 			>
 			<Tool
@@ -41,9 +42,11 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -57,10 +60,19 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				AdditionalDependencies="base.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../out"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -72,6 +84,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -79,7 +94,7 @@
 			Name="Release|Win32"
 			OutputDirectory="../out"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
@@ -103,8 +118,10 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -119,8 +136,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\basemod.dll"
+				AdditionalDependencies="basemod.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="../out"
 				GenerateDebugInformation="true"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -157,19 +177,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\logger\logger.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\threadpool\poolable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\threadpool\poolablecomparision.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\threadpool\threadpool.cpp"
+				RelativePath=".\main.cpp"
 				>
 			</File>
 		</Filter>
@@ -179,31 +187,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\include\common.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\logger.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\poolable.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\poolablecomparision.h"
-				>
-			</File>
-			<File
-				RelativePath=".\resource.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\threadenums.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\threadpool.h"
+				RelativePath=".\writer.h"
 				>
 			</File>
 		</Filter>
@@ -212,10 +196,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\version.rc"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>

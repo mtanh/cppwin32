@@ -1,5 +1,4 @@
 //#include <WinReg.h>
-#include <Windows.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h> // toupper
@@ -11,7 +10,7 @@
 #include <sys/timeb.h>
 #include <algorithm>
 
-#include <logger.h>
+#include "logger.h"
 
 #define GET_THREAD_ID() (GetCurrentThreadId())
 #define GET_PROCESS_ID() (GetCurrentProcessId())

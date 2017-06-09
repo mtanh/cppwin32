@@ -1,16 +1,13 @@
 #ifndef threadpool_h__
 #define threadpool_h__
 
-#include <Windows.h>
-#include <process.h>
+#include <common.h>
 #include <vector>
 #include <queue>
 #include <map>
 #include <limits>
 #include <time.h>
-
-#include <common.h>
-#include <poolablecomparision.h>
+#include "poolablecomparision.h"
 
 #define WAIT_FOR_TASK 5000L // 5 seconds
 #define WAIT_FOR_CHECK 60000L // 60 seconds

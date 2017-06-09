@@ -1,6 +1,9 @@
 #ifndef common_h__
 #define common_h__
 
+#include <Windows.h>
+#include <process.h>
+
 #ifdef _WIN32
 #define DECL_EXPORT	__declspec(dllexport)
 #define DECL_IMPORT	__declspec(dllimport)

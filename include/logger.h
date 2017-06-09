@@ -1,8 +1,8 @@
-#ifndef diclogger_h__
-#define diclogger_h__
+#ifndef logger_h__
+#define logger_h__
 
-#include <common.h>
 #include <time.h>
+#include "common.h"
 
 // Keep last 5 days' log files around
 const int DEFAULT_NKEEP = 5;
@@ -58,22 +58,22 @@ typedef enum {
 #define LOG_OPTION_LOG_FILENAME 0x00000200
 // Include filename/line number with each debug or trace message ?
 
-DECL_DLL void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFileA,
+extern void InitLog(const char* logDir, const char* filenamePrefixA, bool useSingleFileA,
 							 bool switchFilesA, int nKeepA);
-DECL_DLL void InitLogEx(const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA);
-DECL_DLL void SetAutoPurgePeriod(int autoPurgePeriodA);
-DECL_DLL void EndLog(void);
-DECL_DLL void LogPrintf(LogType logType, LPCSTR fmt, ...);
-DECL_DLL void EnableLog(LogType logType);
-DECL_DLL void DisableLog(LogType logType);
-DECL_DLL void SetLogMask(int mask);
-DECL_DLL DWORD LogMaskStr2Mask(const char* maskStr);
+extern void InitLogEx(const char* logDir, const char* filenamePrefixA, DWORD optionsA, int nKeepA);
+extern void SetAutoPurgePeriod(int autoPurgePeriodA);
+extern void EndLog(void);
+extern void LogPrintf(LogType logType, LPCSTR fmt, ...);
+extern void EnableLog(LogType logType);
+extern void DisableLog(LogType logType);
+extern void SetLogMask(int mask);
+extern DWORD LogMaskStr2Mask(const char* maskStr);
 
 // Delete log files older than the given time (in secs)
 // "logFiles" is a comma-separated list of regular expressions.
 // eg: "DICFTP*.log, DICAS2*.log"
 // This means that ',' cannot be used in log filenames.
 // "logFiles" should not contain any spaces.
-DECL_DLL void DeleteExpiredLogs(LPCSTR logDir, LPCSTR logFiles, time_t logExpirationPeriod);
+extern void DeleteExpiredLogs(LPCSTR logDir, LPCSTR logFiles, time_t logExpirationPeriod);
 
-#endif // diclogger_h__
+#endif // logger_h__
